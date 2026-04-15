@@ -5,3 +5,4 @@ torchvision>=0.15
 Pillow>=9.0
 scikit-image>=0.21
 torchxrayvision>=1.2
+POT>=0.9
