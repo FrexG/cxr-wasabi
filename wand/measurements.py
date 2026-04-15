@@ -1,39 +1,6 @@
-import os
-import argparse
-import json
+import torch
 import numpy as np
 from tqdm import tqdm
-
-import torch
-from PIL import Image
-from skimage.measure import label, regionprops, perimeter
-import torchvision.transforms as transforms
-import torchxrayvision as xrv
-
-# --- CONFIGURATION ---
-TRANSFORM = transforms.Compose(
-    [xrv.datasets.XRayCenterCrop(), xrv.datasets.XRayResizer(512)]
-)
-CACHE_DIR = "../weights" #torchxrayvision's default cache directory
-CHECKPOINT_INTERVAL = 50  # Save the DataFrame every 50 images
-
-# --- MODELS ---
-seg_model = xrv.baseline_models.chestx_det.PSPNet(cache_dir=CACHE_DIR)
-
-
-# --- UTILITY FUNCTIONS ---
-def read_image(path):
-    img = Image.open(path).convert("L")  # Ensure grayscale conversion
-    img = np.array(img)
-    img = xrv.datasets.normalize(img, 255)
-    img = img[None, ...]  # Add channel dimension (C, H, W)
-    return img
-
-
-def transform_img(img):
-    # Apply the combined center crop and resize transformation
-    return TRANSFORM(img)
-
 
 def extract_morphometrics(tensor_output):
     """

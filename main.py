@@ -1,19 +1,19 @@
 import os
 import argparse
-import json
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
+import torch
 from PIL import Image
-from src.cxr_wasabi import *
+from wand.measurements import extract_morphometrics
+from wand.segmentation import read_image, transform_img, load_segmentation_model
 
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser()
     argparser.add_argument(
         "--csv_path",
         type=str,
-        default="chexpert_sample.csv",
         help="Path to the CSV file containing image paths and metadata.",
     )
     argparser.add_argument(
@@ -22,11 +22,21 @@ if __name__ == "__main__":
     argparser.add_argument(
         "--output_dir", type=str, default=".", help="Directory to save the output CSV."
     )
+    argparser.add_argument(
+        "--checkpoint_interval",
+        type=int,
+        default=100,
+        help="Number of images to process before saving a checkpoint.",
+    )   
     args = argparser.parse_args()
+    CHECKPOINT_INTERVAL = args.checkpoint_interval
 
     OUTPUT_FILENAME = f"wasabi_morphometric_measurements.csv"
 
     OUTPUT_PATH = os.path.join(args.output_dir, OUTPUT_FILENAME)
+
+    # load segmentation model once
+    seg_model = load_segmentation_model()
 
     # 1. LOAD METADATA
     mimic_metadata = pd.read_csv(args.csv_path)
@@ -78,6 +88,7 @@ if __name__ == "__main__":
 
         # CHECKPOINTING LOGIC
         if (i + 1) % CHECKPOINT_INTERVAL == 0:
+            
             print(f"\n--- Checkpointing progress at {i+1} images. ---\n")
             df.to_csv(OUTPUT_PATH, index=False)
 
